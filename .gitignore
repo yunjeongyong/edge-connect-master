@@ -104,7 +104,6 @@ ENV/
 # custom
 .todo
 results
-checkpoints
 datasets
 
 .DS_Store
