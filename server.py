@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_restful import Resource, Api, reqparse
 from werkzeug.datastructures import FileStorage
-from werkzeug.utils import secure_filename
+from main import main
 import time
 
 app = Flask(__name__)
@@ -39,6 +39,7 @@ class ImageUpload(Resource):
                 'error': str(e)
             }
 
+
 class MaskedImageUpload(Resource):
     def post(self):
         try:
@@ -55,18 +56,24 @@ class MaskedImageUpload(Resource):
             name = args['filename']
 
             ext = name[name.rfind('.'):]
-            filename = name[:name.rfind('.')] + '_masked' + ext
-            maskname = name[:name.rfind('.')] + '_mask' + ext
+            standard_name = name[:name.rfind('.')]
+            filename = standard_name + '_masked' + ext
+            mask_name = standard_name + '_mask' + ext
 
             image_path = './static/{0}'.format(filename)
             image.save(image_path)
 
-            mask_path = './static/{0}'.format(maskname)
+            mask_path = './static/{0}'.format(mask_name)
             mask.save(mask_path)
+
+            result_path = './static/{0}_result{1}'.format(standard_name, ext)
+
+            main(mode=2, model=3, checkpoints='./checkpoints/places2', input=image_path, mask=mask_path, output=result_path)
 
             return {
                 'success': True,
                 'image': image_path,
+                'result': result_path,
                 'mask': mask_path
             }
         except Exception as e:
@@ -75,6 +82,7 @@ class MaskedImageUpload(Resource):
                 'success': False,
                 'error': str(e)
             }
+
 
 api.add_resource(ImageUpload, '/api/images')
 api.add_resource(MaskedImageUpload, '/api/maskeds')

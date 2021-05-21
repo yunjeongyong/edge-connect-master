@@ -4,15 +4,15 @@
 import os
 import glob
 
-image_path_list = ['./datasets/train/', './datasets/val/', './datasets/test/', './datasets/train_mask/', './datasets/val_mask/', './datasets/test_mask/']                               # 이미지 파일 경로 리스트
-flist_path_list = ['./datasets/train.flist', './datasets/val.flist', './datasets/test.flist', './datasets/train_mask.flist', './datasets/val_mask.flist', './datasets/test_mask.flist'] # flist 파일 경로 리스트
+image_path_list = ['./datasets/train/', './datasets/val/', './datasets/test/']                               # 이미지 파일 경로 리스트
+flist_path_list = ['./datasets/train.flist', './datasets/val.flist', './datasets/test.flist']                # flist 파일 경로 리스트
 
 class FlistGenerator():
     def __init__(self, image_path_list, flist_path_list):
         self.image_path_list = image_path_list
         self.flist_path_list = flist_path_list
 
-        for i in range(6):
+        for i in range(3):
             with open(flist_path_list[i], 'w') as f:                                                                # flist 파일 쓰기모드로 열기
                 file_name_list = [os.path.basename(k) for k in glob.glob(image_path_list[i]+'*')]                   # 이미지 파일 경로 리스트로 만들기
                 file_len = len(file_name_list)                                                                      # 파일 개수
@@ -22,4 +22,4 @@ class FlistGenerator():
                     f.write(data)                                                                                   # flist 파일에 이미지 파일 경로\n 쓰기
 
 flist_generator = FlistGenerator(image_path_list, flist_path_list)
-flist_generator._generate_flist()
+#flist_generator._generate_flist()

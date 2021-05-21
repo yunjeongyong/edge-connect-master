@@ -23,7 +23,7 @@ def create_mask(width, height, mask_width, mask_height, x=None, y=None):    # ha
 def create_irregular_mask(width, height, index):
     mask = np.zeros((height, width))
 
-    size = int((width + height) * 0.03)
+    size = int((width + height) * 0.04)
 
     # 랜덤하게 라인 그리기
     for _ in range(randint(1, 20)):  # 무작위로 라인 개수 정함

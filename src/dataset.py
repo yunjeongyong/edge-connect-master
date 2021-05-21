@@ -51,14 +51,14 @@ class Dataset(torch.utils.data.Dataset):
 
     def load_item(self, index):
 
-        size = self.input_size  # 256
+        size = self.input_size                  # 256
 
         # 이미지 변환
         img = Image.open(self.data[index]).convert('RGB')
         img.save(self.data[index])
 
         # load image
-        img = imread(self.data[index])  # (256, 256, 3)
+        img = imread(self.data[index])          # (256, 256, 3)
 
         # gray to rgb
         if len(img.shape) < 3:
@@ -70,17 +70,16 @@ class Dataset(torch.utils.data.Dataset):
         h = h - (h % 4)
         w = w - (w % 4)
         img = self.resize(img, h, w)
-        print(img.shape)
 
         # resize/crop if needed
         if size != 0:
-            img = self.resize(img, size, size)  # (256, 256, 3)
+            img = self.resize(img, size, size)          # (256, 256, 3)
         # create grayscale image
-        img_gray = rgb2gray(img)  # (256, 256, 3) → (256, 256)
+        img_gray = rgb2gray(img)                        # (256, 256, 3) → (256, 256)
         # load mask
-        mask = self.load_mask(img, index)  # (256, 256, 3)
+        mask = self.load_mask(img, index)               # (256, 256, 3)
         # load edge
-        edge = self.load_edge(img_gray, index, mask)  # (256, 256)
+        edge = self.load_edge(img_gray, index, mask)    # (256, 256)
         # augment data
         if self.augment and np.random.binomial(1, 0.5) > 0:
             img = img[:, ::-1, ...]
@@ -89,6 +88,7 @@ class Dataset(torch.utils.data.Dataset):
             mask = mask[:, ::-1, ...]
 
         return self.to_tensor(img), self.to_tensor(img_gray), self.to_tensor(edge), self.to_tensor(mask)
+
     def load_edge(self, img, index, mask):
         sigma = self.sigma
 
@@ -124,7 +124,12 @@ class Dataset(torch.utils.data.Dataset):
         imgh, imgw = img.shape[0:2]     # 256, 256
         mask_type = self.mask           # 3: external
 
-        if mask_type == 6:
+        # irregular + random block
+        if mask_type == 8:
+            mask_type = 7 if np.random.binomial(1, 0.5) == 7 else 1
+
+        # irregular mask
+        if mask_type == 7:
             return create_irregular_mask(imgw, imgh, index)
 
         # external + random block
@@ -158,7 +163,7 @@ class Dataset(torch.utils.data.Dataset):
             mask.save(self.data[index])
             mask = imread(self.mask_data[index])
             mask = self.resize(mask, imgh, imgw, centerCrop=False)  # (256, 256, 3)
-            mask = rgb2gray(mask)  # (256, 256)
+            mask = rgb2gray(mask)                                   # (256, 256)
             mask = (mask > 0).astype(np.uint8) * 255
             return mask
 
@@ -210,18 +215,3 @@ class Dataset(torch.utils.data.Dataset):
 
             for item in sample_loader:
                 yield item
-
-
-# if __name__ == '__main__':
-#     images = os.listdir('../static')
-#     if not os.path.exists('../test1'): os.mkdir('../test1')
-#     for image in images:
-#         # img = imread(self.data[index])          # (256, 256, 3)
-#         img = imread('../static/' + image)
-#         print('ndim:', img.ndim, 'shape:', img.shape[2])
-#         newImage = Image.open('../static/' + image).convert('RGB')
-#         newImage.save('../test1/' + image)
-#
-#         img2 = imread('../test1/' + image)
-#         print('ndim:', img2.ndim, 'shape:', img2.shape[2])
-#         print()
