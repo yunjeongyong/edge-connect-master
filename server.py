@@ -2,6 +2,8 @@ from flask import Flask
 from flask_restful import Resource, Api, reqparse
 from werkzeug.datastructures import FileStorage
 from main import main
+from PIL import Image
+from scipy.misc import imresize, imsave
 import time
 
 app = Flask(__name__)
@@ -43,13 +45,12 @@ class ImageUpload(Resource):
 class MaskedImageUpload(Resource):
     def post(self):
         try:
+            # parse parameters
             parser = reqparse.RequestParser()
             parser.add_argument('masked', type=FileStorage, location='files')
             parser.add_argument('mask', type=FileStorage, location='files')
             parser.add_argument('filename', type=str)
             args = parser.parse_args()
-
-            print(args)
 
             image = args['masked']
             mask = args['mask']
@@ -60,15 +61,26 @@ class MaskedImageUpload(Resource):
             filename = standard_name + '_masked' + ext
             mask_name = standard_name + '_mask' + ext
 
+            # save input images
             image_path = './static/{0}'.format(filename)
             image.save(image_path)
 
             mask_path = './static/{0}'.format(mask_name)
             mask.save(mask_path)
 
-            result_path = './static/{0}_result{1}'.format(standard_name, ext)
+            result_path = './static/results/{0}'.format(filename)
 
-            main(mode=2, model=3, checkpoints='./checkpoints/places2', input=image_path, mask=mask_path, output=result_path)
+            # resize images
+            resizes = [256, 256]
+            img_masked = Image.open(image_path).convert('RGB')
+            img_masked = imresize(img_masked, resizes)
+            imsave(image_path, img_masked)
+
+            img_mask = Image.open(mask_path).convert('RGB')
+            img_mask = imresize(img_mask, resizes)
+            imsave(mask_path, img_mask)
+
+            main(mode=2, model=3, input=image_path, mask=mask_path)
 
             return {
                 'success': True,
@@ -77,7 +89,6 @@ class MaskedImageUpload(Resource):
                 'mask': mask_path
             }
         except Exception as e:
-            # print(str(e))
             return {
                 'success': False,
                 'error': str(e)

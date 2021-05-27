@@ -9,7 +9,7 @@ from src.config import Config
 from src.edge_connect import EdgeConnect
 
 
-def main(mode=None, **kwargs):    # 1: train, 2: test, 3: eval
+def main(mode, model, input, mask):    # 1: train, 2: test, 3: eval
     r"""starts the model
 
     Args:
@@ -17,7 +17,8 @@ def main(mode=None, **kwargs):    # 1: train, 2: test, 3: eval
     """
 
     # config = load_config(mode)
-    config = load_config2(mode, **kwargs)
+    # config = load_config2(mode, **kwargs)
+    config = load_config3(mode, model, input, mask)
 
     # cuda visble devices
     os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(str(e) for e in config.GPU)
@@ -131,20 +132,22 @@ def load_config(mode=None):
     return config
 
 
-def load_config2(mode=None, **parameter_dict):
+# main(mode=2, model=3, checkpoints='./checkpoints/places2', input=image_path, mask=mask_path, output=result_path)
+def load_config3(mode, model, input, mask):
     r"""loads model config
 
-        Args:
-            mode (int): 1: train, 2: test, 3: eval, reads from config file if not specified
-        """
+    Args:
+        mode (int): 1: train, 2: test, 3: eval, reads from config file if not specified
+    """
 
-    print(parameter_dict)
-    parameter_dict.path = parameter_dict['checkpoints']
-    config_path = os.path.join(parameter_dict.path, 'config.yml')
+    path = './checkpoints/indoor'
+    checkpoints = './checkpoints/places2'
+    config_path = os.path.join(path, 'config.yml')
+    output = './static/results'
 
     # create checkpoints path if does't exist
-    if not os.path.exists(parameter_dict.path):
-        os.makedirs(parameter_dict.path)
+    if not os.path.exists(path):
+        os.makedirs(path)
 
     # copy config template if does't exist
     if not os.path.exists(config_path):
@@ -156,31 +159,31 @@ def load_config2(mode=None, **parameter_dict):
     # train mode
     if mode == 1:
         config.MODE = 1
-        if parameter_dict.model:
-            config.MODEL = parameter_dict.model
+        if model:
+            config.MODEL = model
 
     # test mode
     elif mode == 2:
         config.MODE = 2
-        config.MODEL = parameter_dict.model if parameter_dict.model is not None else 3  # kwargs.model이 NULL이면 3 그렇지 않으면 입력받은 값
+        config.MODEL = model if model is not None else 3  # args.model이 NULL이면 3 그렇지 않으면 입력받은 값
         config.INPUT_SIZE = 0
 
-        if parameter_dict.input is not None:
-            config.TEST_FLIST = parameter_dict.input
+        if input is not None:
+            config.TEST_FLIST = input
 
-        if parameter_dict.mask is not None:
-            config.TEST_MASK_FLIST = parameter_dict.mask
+        if mask is not None:
+            config.TEST_MASK_FLIST = mask
 
-        if parameter_dict.edge is not None:
-            config.TEST_EDGE_FLIST = parameter_dict.edge
+        # if args.edge is not None:
+        #     config.TEST_EDGE_FLIST = edge
 
-        if parameter_dict.output is not None:
-            config.RESULTS = parameter_dict.output
+        if output is not None:
+            config.RESULTS = output
 
     # eval mode
     elif mode == 3:
         config.MODE = 3
-        config.MODEL = parameter_dict.model if parameter_dict.model is not None else 3
+        config.MODEL = model if model is not None else 3
 
     return config
 
